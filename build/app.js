@@ -77,29 +77,43 @@
 	};
 	_firebase2.default.initializeApp(config);
 
-	var App = function (_React$Component) {
-	  _inherits(App, _React$Component);
+	var FileUpload = function (_React$Component) {
+	  _inherits(FileUpload, _React$Component);
 
-	  function App() {
-	    _classCallCheck(this, App);
+	  function FileUpload() {
+	    _classCallCheck(this, FileUpload);
 
-	    var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this));
+	    var _this = _possibleConstructorReturn(this, (FileUpload.__proto__ || Object.getPrototypeOf(FileUpload)).call(this));
 
 	    _this.state = {
-	      name: 'Kras'
+	      uploadValue: 0
 	    };
+	    _this.handleOnChange = _this.handleOnChange.bind(_this);
 	    return _this;
 	  }
 
-	  _createClass(App, [{
-	    key: 'componentWillMount',
-	    value: function componentWillMount() {
+	  _createClass(FileUpload, [{
+	    key: 'handleOnChange',
+	    value: function handleOnChange(event) {
 	      var _this2 = this;
 
-	      var nameRef = _firebase2.default.database().ref().child('object').child('name');
-	      nameRef.on('value', function (snapshot) {
+	      var file = event.target.files[0];
+	      var storageRef = _firebase2.default.storage().ref('pictures/' + file.name);
+	      var task = storageRef.put(file);
+
+	      task.on('state_changed', function (snapshot) {
+	        var percentage = snapshot.bytesTransferred / snapshot.totalBytes * 100;
 	        _this2.setState({
-	          name: snapshot.val()
+	          uploadValue: percentage
+	        });
+	      }, function (error) {
+	        _this2.setState({
+	          message: 'Ha ocurrido un error: ' + error.message
+	        });
+	      }, function () {
+	        _this2.setState({
+	          message: 'Archivo subido exitosamente',
+	          picture: task.snapshot.downloadURL
 	        });
 	      });
 	    }
@@ -107,19 +121,22 @@
 	    key: 'render',
 	    value: function render() {
 	      return _react2.default.createElement(
-	        'h1',
+	        'div',
 	        null,
-	        'Hola ',
-	        this.state.name,
-	        '!'
+	        _react2.default.createElement('progress', { value: this.state.uploadValue, max: '100' }),
+	        _react2.default.createElement('br', null),
+	        _react2.default.createElement('input', { type: 'file', onChange: this.handleOnChange }),
+	        _react2.default.createElement('br', null),
+	        this.state.message,
+	        _react2.default.createElement('img', { src: this.state.picture, width: '100' })
 	      );
 	    }
 	  }]);
 
-	  return App;
+	  return FileUpload;
 	}(_react2.default.Component);
 
-	_reactDom2.default.render(_react2.default.createElement(App, null), document.getElementById('root'));
+	_reactDom2.default.render(_react2.default.createElement(FileUpload, null), document.getElementById('root'));
 
 /***/ },
 /* 1 */
